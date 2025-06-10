@@ -1,0 +1,104 @@
+let bg;
+let fist;
+let flowers = [];
+let flowerObjects = [];
+let wavingImage;
+
+function preload() {
+  bg = loadImage('streets2.jpg');         // background image
+  fist = loadImage('Untitled-4.png');     // protest fist image
+  wavingImage = loadImage('streets.png'); // waving flag image
+
+  flowers.push(loadImage('r.png'));
+  flowers.push(loadImage('Untitled-9.png'));
+  flowers.push(loadImage('Untitled-17.png'));
+}
+
+function setup() {
+  createCanvas(1000, 600, WEBGL);
+  imageMode(CENTER);
+
+  for (let i = 0; i < 15; i++) {
+    flowerObjects.push({
+      img: random(flowers),
+      x: random(-width / 2, width / 2),
+      y: random(-height / 2, height / 2),
+      size: random(150, 180),
+      speedX: random(-0.5, 0.5),
+      speedY: random(-0.2, 0.2),
+      floatOffset: random(TWO_PI)
+    });
+  }
+}
+
+function draw() {
+  background(255); // white full canvas background
+  noStroke();
+
+  // Draw smaller background image centered like a poster
+  push();
+  translate(0, 0, -1); // slightly behind everything
+  noStroke();
+  texture(bg);
+  plane(700, 500); // smaller than canvas
+  pop();
+
+  // Draw floating flowers
+  for (let f of flowerObjects) {
+    let floatY = sin(frameCount * 0.02 + f.floatOffset) * 5;
+    f.x += f.speedX;
+    f.y += f.speedY;
+
+    // Wrap around edges
+    if (f.x > width / 2 + 50) f.x = -width / 2 - 50;
+    if (f.x < -width / 2 - 50) f.x = width / 2 + 50;
+    if (f.y > height / 2 + 50) f.y = -height / 2 - 50;
+    if (f.y < -height / 2 - 50) f.y = height / 2 + 50;
+
+    push();
+    translate(f.x, f.y + floatY);
+    texture(f.img);
+    plane(f.size, f.size);
+    pop();
+  }
+
+  // Draw waving flag
+  push();
+  translate(0, -180); // adjust as needed
+  drawWavingImage(wavingImage, 600, 500);
+  pop();
+
+  // Draw fist bobbing
+  let fistY = sin(frameCount * 0.05) * 20;
+  push();
+  translate(250, 100 + fistY);
+  texture(fist);
+  plane(160, 160);
+  pop();
+}
+
+function drawWavingImage(img, w, h) {
+  let cols = 30;
+  let rows = 20;
+  let cellW = w / cols;
+  let cellH = h / rows;
+
+  texture(img);
+  for (let y = 0; y < rows; y++) {
+    beginShape(TRIANGLE_STRIP);
+    for (let x = 0; x <= cols; x++) {
+      let u = x / cols;
+      let v1 = y / rows;
+      let v2 = (y + 1) / rows;
+
+      let xPos = x * cellW - w / 2;
+      let wave = sin((x * 0.3) + frameCount * 0.05) * 10;
+      let y1 = y * cellH - h / 2 + wave;
+      let y2 = (y + 1) * cellH - h / 2 + wave;
+
+      vertex(xPos, y1, 0, u * img.width, v1 * img.height);
+      vertex(xPos, y2, 0, u * img.width, v2 * img.height);
+    }
+    endShape();
+  }
+}
